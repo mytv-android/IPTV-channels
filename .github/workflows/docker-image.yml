@@ -8,7 +8,7 @@ on:
 
 env:
   APP_NAME: iptv-channels
-  DOCKERHUB_REPO: bf963/iptv-channels
+  DOCKERHUB_REPO: ldm0206/iptv-channels
 
 jobs:
 

@@ -52,7 +52,7 @@ class Config:
     STBVersion: str = ''
     UserAgent: str = ''
     Authenticator: str = ''
-    UDPxy: str = ''
+    RTP2HTTPD: str = ''
     
     
     @classmethod
@@ -332,22 +332,36 @@ def process_channel_data(channels: List[Tuple[str, ...]]) -> Dict[str, List[str]
         fm3u.write('#EXTM3U\n')
         
         # 定义频道分类处理函数
+        # r'ChannelID\=\"(\d+)\",'
+        # r'ChannelName\=\"(.+?)\",'
+        # r'UserChannelID\=\"(\d+)\",'
+        # r'ChannelURL=\"igmp://(.+?)\".+?'
+        # r'TimeShift\=\"(\d+)\",'
+        # r'TimeShiftLength\=\"(\d+)\".+?,'
+        # r'TimeShiftURL\=\"(.+?\.smil)',
+        # r'FCCEnable=\=\"(\d+)\"',
+        # r'ChannelFCCIP=\"(\d+)\",'
+        # r'ChannelFCCPort=\"(\d+)\"'
+        # r'ChannelFECPort=\"(\d+)\"'
+
         def write_channel(category: str, condition: Callable[[str], bool]):
             for channel in channels:
                 if condition(channel[1]):
                     name = "CCTV-14高清" if channel[1] == "CCTV-少儿高清" else channel[1]
-                    udpxy = config.get('UDPxy', 'http://192.168.5.1:8888')
-                    url = f'{udpxy}/rtp/{channel[3]}'
-                    
+                    RTP2HTTPD = config.get('RTP2HTTPD', 'http://192.168.5.1:8888')
+                    url = f'{RTP2HTTPD}/rtp/{channel[3]}'
+                    if channel[7] == '2':  # 使用FCC
+                        url = f'{url}?fcc={channel[8]:channel[9]}'
                     # 写入txt文件
-                    
-                    if channel[4] == '1': #支持时移的源
-                        ftxt.write(f'{name},{channel[6]}#{url}\n')
+                    rtspUrl = channel[6].replace(
+                        "rtsp://", f'{RTP2HTTPD}/rtsp/')+'?playseek=${(b)yyyyMMddHHmmss}-${(e)yyyyMMddHHmmss}' if channel[4] == '1' else None
+                    if rtspUrl is not None:  # 支持时移的源
+                        ftxt.write(f'{name},{rtspUrl}#{url}\n')
                     else:
-                        ftxt.write(f'{name},{url}#{channel[6]}\n')
-                    
+                        ftxt.write(f'{name},{url}\n')
+                    m3uPlaybackFormat = f'catchup="default" catchup-source="{rtspUrl}"' if rtspUrl is not None else ""
                     # 写入m3u文件
-                    fm3u.write(f'#EXTINF:-1 group-title="{category}", {name}\n{url}\n')
+                    fm3u.write(f'#EXTINF:-1 group-title="{category}" {m3uPlaybackFormat}, {name}\n{url}\n')
                     
                     # 记录频道信息
                     channel_ids.append([channel[0], name, channel[2]])
@@ -385,6 +399,8 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
     logger.debug(response.text)
     
     # 使用正则表达式提取频道信息
+    # 'Channel','ChannelID="674242603",ChannelName="四川卫视高清",UserChannelID="40",ChannelURL="igmp://239.94.0.60:5140",TimeShift="1",TimeShiftLength="7200",ChannelSDP="igmp://239.94.0.60:5140",TimeShiftURL="rtsp://182.128.24.170/PLTV/88888896/224/3221228561/674242604_mdn_1.smil?rrsip=118.123.185.42&zoneoffset=480&icpid=EPG30&limitflux=-1&limitdur=-1&tenantId=8601&GuardEncType=2&accountinfo=%2C2232589%2C10.242.101.191%2C20260123172852%2C20000002000000050000000000000550%2C2232589%2C-1%2C0%2C1%2C%2C%2C7%2C%2C%2C%2C4%2C%2C674242604%2CEND",ChannelType="1",IsHDChannel="2",PreviewEnable="0",ChannelPurchased="1",ChannelLocked="0",ChannelLogURL="",PositionX="",PositionY="",BeginTime="0",Interval="",Lasting="",ActionType="1",FCCEnable="2",ChannelFCCIP="182.128.24.170",ChannelFCCPort="8027",ChannelFECPort="1234"'
+    # iRet = Authentication.CTCSetConfig('Channel','ChannelID="770656338",ChannelName="山东卫视4K",UserChannelID="39",ChannelURL="igmp://239.94.0.120:5140",TimeShift="0",TimeShiftLength="0",ChannelSDP="igmp://239.94.0.120:5140",TimeShiftURL="rtsp://182.128.24.170/PLTV/88888896/224/3221228773/770656339.smil?rrsip=118.123.185.42&zoneoffset=480&icpid=EPG30&limitflux=-1&limitdur=-1&tenantId=8601&GuardEncType=2&accountinfo=%2C2232589%2C10.242.101.191%2C20260123172852%2C00000001000000050000000000015988%2C2232589%2C-1%2C0%2C1%2C%2C%2C7%2C%2C%2C%2C4%2C%2C770656339%2CEND",ChannelType="1",IsHDChannel="2",PreviewEnable="0",ChannelPurchased="1",ChannelLocked="0",ChannelLogURL="",PositionX="",PositionY="",BeginTime="0",Interval="",Lasting="",ActionType="1",FCCEnable="0",ChannelFCCIP="",ChannelFCCPort="",ChannelFECPort="0"'
     pattern = re.compile(
         r'ChannelID\=\"(\d+)\",'
         r'ChannelName\=\"(.+?)\",'
@@ -392,7 +408,11 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
         r'ChannelURL=\"igmp://(.+?)\".+?'
         r'TimeShift\=\"(\d+)\",'
         r'TimeShiftLength\=\"(\d+)\".+?,'
-        r'TimeShiftURL\=\"(.+?\.smil)'
+        r'TimeShiftURL\=\"(.+?\.smil)',
+        r'FCCEnable=\=\"(\d+)\"',
+        r'ChannelFCCIP=\"(\d+)\"',
+        r'ChannelFCCPort=\"(\d+)\"',
+        r'ChannelFECPort=\"(\d+)\"'
     )
     
     channels = pattern.findall(response.text)
