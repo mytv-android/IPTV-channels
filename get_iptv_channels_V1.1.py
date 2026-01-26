@@ -184,7 +184,8 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
             logger.info(f'尝试获取认证信息 (尝试 {retry_count + 1}/{max_retries})')
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
-            
+            with open(os.getcwd() + "/log/AuthenticationURL.jsp", "w", encoding="utf-8") as f:
+                f.write(response.text)
             # 记录返回的页面内容
             logger.debug(f"请求返回内容：\n{response.text}")
             
@@ -211,6 +212,8 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
             
             # 记录原始响应内容
             logger.debug(f"authLogin响应内容：\n{auth_response.text}")
+            with open(os.getcwd() + "/log/authLoginHWCTC.jsp", "w", encoding="utf-8") as f:
+                f.write(auth_response.text)
             
             # 解析返回的HTML内容
             soup = BeautifulSoup(auth_response.text, 'html.parser')
@@ -247,25 +250,27 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
             }
             valid_data = {
                 'UserID': UserID,
-                'Lang': '',
+                'Lang': '0',
                 'SupportHD': '1',
                 'NetUserID': '',
                 'Authenticator': Authenticator,
                 'STBType': STBType,
                 'STBVersion': STBVersion,
-                'conntype': '',
+                'conntype': 'dhcp',
                 'STBID': STBID,
                 'templateName': '',
                 'areaId': '',
                 'userToken': userToken,
-                'userGroupId': '',
+                'userGroupId': '1',
                 'productPackageId': '',
                 'mac': mac,
                 'UserField': '',
                 'SoftwareVersion': '',
-                'IsSmartStb': 'undefined',
-                'desktopId': 'undefined',
+                'IsSmartStb': '',
+                'desktopId': '',
                 'stbmaker': '',
+                'XMPPCapability': '',
+                'ChipID': '',
                 'VIP': '',
             }
             
