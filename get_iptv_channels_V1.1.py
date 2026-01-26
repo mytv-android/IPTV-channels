@@ -400,7 +400,8 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
     response = requests.post(channel_url, cookies=cookies, data=channel_data)
     response.raise_for_status()
     logger.debug(response.text)
-    
+    with open(os.getcwd() + "/log/getchannellistHWCTC.jsp", "w", encoding="utf-8") as f:
+        f.write(response.text)
     # 使用正则表达式提取频道信息
     # 'Channel','ChannelID="674242603",ChannelName="四川卫视高清",UserChannelID="40",ChannelURL="igmp://239.94.0.60:5140",TimeShift="1",TimeShiftLength="7200",ChannelSDP="igmp://239.94.0.60:5140",TimeShiftURL="rtsp://182.128.24.170/PLTV/88888896/224/3221228561/674242604_mdn_1.smil?rrsip=118.123.185.42&zoneoffset=480&icpid=EPG30&limitflux=-1&limitdur=-1&tenantId=8601&GuardEncType=2&accountinfo=%2C2232589%2C10.242.101.191%2C20260123172852%2C20000002000000050000000000000550%2C2232589%2C-1%2C0%2C1%2C%2C%2C7%2C%2C%2C%2C4%2C%2C674242604%2CEND",ChannelType="1",IsHDChannel="2",PreviewEnable="0",ChannelPurchased="1",ChannelLocked="0",ChannelLogURL="",PositionX="",PositionY="",BeginTime="0",Interval="",Lasting="",ActionType="1",FCCEnable="2",ChannelFCCIP="182.128.24.170",ChannelFCCPort="8027",ChannelFECPort="1234"'
     # iRet = Authentication.CTCSetConfig('Channel','ChannelID="770656338",ChannelName="山东卫视4K",UserChannelID="39",ChannelURL="igmp://239.94.0.120:5140",TimeShift="0",TimeShiftLength="0",ChannelSDP="igmp://239.94.0.120:5140",TimeShiftURL="rtsp://182.128.24.170/PLTV/88888896/224/3221228773/770656339.smil?rrsip=118.123.185.42&zoneoffset=480&icpid=EPG30&limitflux=-1&limitdur=-1&tenantId=8601&GuardEncType=2&accountinfo=%2C2232589%2C10.242.101.191%2C20260123172852%2C00000001000000050000000000015988%2C2232589%2C-1%2C0%2C1%2C%2C%2C7%2C%2C%2C%2C4%2C%2C770656339%2CEND",ChannelType="1",IsHDChannel="2",PreviewEnable="0",ChannelPurchased="1",ChannelLocked="0",ChannelLogURL="",PositionX="",PositionY="",BeginTime="0",Interval="",Lasting="",ActionType="1",FCCEnable="0",ChannelFCCIP="",ChannelFCCPort="",ChannelFECPort="0"'
@@ -411,11 +412,11 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
         r'ChannelURL=\"igmp://(.+?)\".+?'
         r'TimeShift\=\"(\d+)\",'
         r'TimeShiftLength\=\"(\d+)\".+?,'
-        r'TimeShiftURL\=\"(.+?\.smil)',
-        r'FCCEnable=\=\"(\d+)\"',
-        r'ChannelFCCIP=\"(\d+)\"',
-        r'ChannelFCCPort=\"(\d+)\"',
-        r'ChannelFECPort=\"(\d+)\"'
+        r'TimeShiftURL\=\"(.+?)\",'
+        r'FCCEnable=\=\"(\d+)\",'
+        r'ChannelFCCIP=\"(\d+)\",'
+        r'ChannelFCCPort=\"(\d+)\",'
+        r'ChannelFECPort=\"(\d+)\",'
     )
     
     channels = pattern.findall(response.text)
