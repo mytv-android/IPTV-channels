@@ -153,7 +153,7 @@ Authenticator = config.get('Authenticator', '')
 required_configs = {
     'UserID': UserID,
     'mac': mac,
-    # 'STBID': STBID,
+    'STBID': STBID,
     'Authenticator': Authenticator
 }
 
@@ -282,6 +282,9 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
             # 如果响应是HTML，使用正则表达式提取UserToken和stbid
             if valid_response.headers.get('Content-Type', '').startswith('text/html'):
                 html_content = valid_response.text
+
+                with open(os.getcwd() + "/log/ValidAuthenticationHWCTC.jsp", "w", encoding="utf-8") as f:
+                    f.write(html_content)
                 
                 # 提取UserToken
                 user_token_match = re.search(r'name="UserToken"\s*value="([^"]+)"', html_content)
@@ -385,7 +388,7 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
     """获取频道列表"""
     channel_url = f'http://{host}/EPG/jsp/getchannellistHWCTC.jsp'
     channel_data = {
-        'conntype': '',
+        'conntype': 'dhcp',
         'UserToken': user_token,
         'tempKey': '', 
         'stbid': stbid,
