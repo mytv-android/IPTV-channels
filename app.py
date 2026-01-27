@@ -103,9 +103,9 @@ def save_config():
         config_data = request.json
 
         # 添加默认UserAgent
-        config_data["UserAgent"] = (
-            "Mozilla/5.0 (X11; Android x86_64; ChromiumBrowser) AppleWebKit/534.24 (KHTML, like Gecko) Safari/534.24 SkWebKit-SC-CTC"
-        )
+        # config_data["UserAgent"] = (
+        #     "Mozilla/5.0 (X11; Android x86_64; ChromiumBrowser) AppleWebKit/534.24 (KHTML, like Gecko) Safari/534.24 SkWebKit-SC-CTC"
+        # )
 
         # 确保config目录存在
         config_dir = os.path.dirname(CONFIG_PATH)

@@ -53,8 +53,10 @@ class Config:
     UserAgent: str = ''
     Authenticator: str = ''
     RTP2HTTPD: str = ''
-    
-    
+    UserAgent: str = ''
+    templateName: str = ''
+    areaId: str = ''
+
     @classmethod
     def load(cls, config_file: str = CONFIG_PATH) -> 'Config':
         """加载配置文件"""
@@ -149,6 +151,8 @@ STBVersion = config.get('STBVersion', '')
 UserAgent = config.get('UserAgent', '')
 Authenticator = config.get('Authenticator', '')
 X_Requested_With = "com.skyworth.iptv"
+templateName = config.get('templateName', '')
+areaId = config.get('areaId', '')
 # 检查必要配置项
 required_configs = {
     'UserID': UserID,
@@ -259,8 +263,8 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
                 'STBVersion': STBVersion,
                 'conntype': 'dhcp',
                 'STBID': STBID,
-                'templateName': '',
-                'areaId': '',
+                'templateName': templateName,
+                'areaId': areaId,
                 'userToken': userToken,
                 'userGroupId': '1',
                 'productPackageId': '',
