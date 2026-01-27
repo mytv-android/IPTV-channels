@@ -367,7 +367,7 @@ def process_channel_data(channels: List[Tuple[str, ...]]) -> Dict[str, List[str]
                     if channel[7] == '2':  # 使用FCC
                         url = f'{url}?fcc={channel[8]}:{channel[9]}'
                         append = True
-                    if channel[10] != '0':  # 使用FEC
+                    if channel[10] and channel[10] != '0':  # 使用FEC
                         if append:
                             url = f'{url}&fec={channel[10]}'
                         else:
@@ -437,8 +437,8 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
         r'TimeShiftURL\=\"(.+?)\".+?'
         r'FCCEnable\=\"(\d+)\",'
         r'ChannelFCCIP=\"(.*?)\",'
-        r'ChannelFCCPort=\"(\d+)\",'
-        r'ChannelFECPort=\"(\d+)\"'
+        r'ChannelFCCPort=\"(.*?)\",'
+        r'ChannelFECPort=\"(.*?)\"'
     )
     
     channels = pattern.findall(response.text)
