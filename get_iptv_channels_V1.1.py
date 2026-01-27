@@ -148,7 +148,7 @@ STBType = config.get('STBType', '')
 STBVersion = config.get('STBVersion', '')
 UserAgent = config.get('UserAgent', '')
 Authenticator = config.get('Authenticator', '')
-
+X_Requested_With = "com.skyworth.iptv"
 # 检查必要配置项
 required_configs = {
     'UserID': UserID,
@@ -178,7 +178,7 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
             headers = {
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                 'User-Agent': UserAgent,
-                'X-Requested-With': 'com.android.smart.terminal.iptv',
+                'X-Requested-With': X_Requested_With,
             }
             
             logger.info(f'尝试获取认证信息 (尝试 {retry_count + 1}/{max_retries})')
@@ -200,7 +200,7 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
                 'User-Agent': UserAgent,
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Referer': f'http://{host}/EPG/jsp/AuthenticationURL?UserID={UserID}&Action=Login',
-                'X-Requested-With': 'com.android.smart.terminal.iptv',
+                'X-Requested-With': X_Requested_With,
             }
             auth_data = {
                 'UserID': UserID,
@@ -247,6 +247,7 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
                 'User-Agent': UserAgent,
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Referer': f'http://{host}/EPG/jsp/authLoginHWCTC.jsp',
+                'X-Requested-With': X_Requested_With,
             }
             valid_data = {
                 'UserID': UserID,
@@ -401,8 +402,13 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
         'UserID': UserID,
         'Lang': '1'
     }
-    
-    response = requests.post(channel_url, cookies=cookies, data=channel_data)
+    headers = {
+        'User-Agent': UserAgent,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': f'http://{host}/EPG/jsp/ValidAuthenticationHWCTC.jsp',
+        'X-Requested-With': X_Requested_With,
+    }
+    response = requests.post(channel_url, headers=headers, cookies=cookies, data=channel_data)
     response.raise_for_status()
     logger.debug(response.text)
     with open(os.getcwd() + "/log/getchannellistHWCTC.jsp", "w", encoding="utf-8") as f:

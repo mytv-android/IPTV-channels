@@ -104,7 +104,7 @@ def save_config():
 
         # 添加默认UserAgent
         config_data["UserAgent"] = (
-            "B700-V2A|Mozilla|5.0|ztebw(Chrome)|1.2.0;Resolution(PAL,720p,1080i) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.63 Safari/535.7"
+            "Mozilla/5.0 (X11; Android x86_64; ChromiumBrowser) AppleWebKit/534.24 (KHTML, like Gecko) Safari/534.24 SkWebKit-SC-CTC"
         )
 
         # 确保config目录存在
