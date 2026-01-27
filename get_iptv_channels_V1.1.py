@@ -429,7 +429,7 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
         r'TimeShiftLength\=\"(\d+)\".+?,'
         r'TimeShiftURL\=\"(.+?)\",'
         r'FCCEnable=\=\"(\d+)\",'
-        r'ChannelFCCIP=\"(\d+)\",'
+        r'ChannelFCCIP=\"(.+?)\",'
         r'ChannelFCCPort=\"(\d+)\",'
         r'ChannelFECPort=\"(\d+)\",'
     )
