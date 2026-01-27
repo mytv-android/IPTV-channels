@@ -364,7 +364,7 @@ def process_channel_data(channels: List[Tuple[str, ...]]) -> Dict[str, List[str]
                     RTP2HTTPD = config.get('RTP2HTTPD', 'http://192.168.5.1:8888')
                     url = f'{RTP2HTTPD}/rtp/{channel[3]}'
                     if channel[7] == '2':  # 使用FCC
-                        url = f'{url}?fcc={channel[8]:channel[9]}'
+                        url = f'{url}?fcc={channel[8]}:{channel[9]}'
                     # 写入txt文件
                     rtspUrl = channel[6].replace(
                         "rtsp://", f'{RTP2HTTPD}/rtsp/')+'?playseek=${(b)yyyyMMddHHmmss}-${(e)yyyyMMddHHmmss}' if channel[4] == '1' else None
@@ -427,11 +427,11 @@ def get_channel_list(host: str, cookies: dict, user_token: str, stbid: str) -> D
         r'ChannelURL=\"igmp://(.+?)\".+?'
         r'TimeShift\=\"(\d+)\",'
         r'TimeShiftLength\=\"(\d+)\".+?,'
-        r'TimeShiftURL\=\"(.+?)\",'
-        r'FCCEnable=\=\"(\d+)\",'
-        r'ChannelFCCIP=\"(.+?)\",'
+        r'TimeShiftURL\=\"(.+?)\".+?'
+        r'FCCEnable\=\"(\d+)\",'
+        r'ChannelFCCIP=\"(.*?)\",'
         r'ChannelFCCPort=\"(\d+)\",'
-        r'ChannelFECPort=\"(\d+)\",'
+        r'ChannelFECPort=\"(\d+)\"'
     )
     
     channels = pattern.findall(response.text)
