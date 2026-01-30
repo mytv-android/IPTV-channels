@@ -14,12 +14,13 @@
 
 # 使用前提
 - 必须获取到IPTV接口的IP地址
-- 必须获取到UserID mac STBID STBType STBVersion Authenticator 信息
+- 必须获取到UserID mac STBID STBType STBVersion Authenticator 等信息
 - 内网RTP2HTTPD服务器已搭好
 
 # 使用方法
-    docker run -d --name iptv -p 5000:5000 -v /path/config:/app/config --restart always bf963/iptv-channels:latest
+    docker run -d --name iptv -p 5000:5000 -v /path/config:/app/config --restart always ldm0206/iptv-channels:latest
 
 - 访问http://host:5000
+- 输出文件在http://host:5000/output/sctv.m3u
 ![alt text](config.png)
 ![alt text](channels.png)

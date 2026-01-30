@@ -334,7 +334,7 @@ def process_channel_data(channels: List[Tuple[str, ...]]) -> Dict[str, List[str]
     channel_ids = []
     
     # 过滤无效频道
-    channels = [ch for ch in channels if "画中画" not in ch[1] and "单音轨" not in ch[1] and "热门" not in ch[1] and "直播室" not in ch[1] and "92" not in ch[1] and "精彩推荐专区" not in ch[1] and "精彩导视" not in ch[1]]
+    channels = [ch for ch in channels if "画中画" not in ch[1] and "单音轨" not in ch[1]]
     
     # 使用with语句安全处理文件
     with open(os.getcwd() +'/output/sctv.txt', 'w', encoding='utf-8') as ftxt, \
