@@ -87,6 +87,15 @@
                                 <label for="areaId" class="form-label">areaId</label>
                                 <input type="text" class="form-control" id="areaId" name="areaId" placeholder="抓包获取">
                             </div>
+                            <!-- 新增 Git 配置 -->
+                            <div class="mb-3">
+                                <label for="epg_git_repo" class="form-label">EPG Git 仓库地址</label>
+                                <input type="text" class="form-control" id="epg_git_repo" name="epg_git_repo" placeholder="例如：https://github.com/username/repo.git">
+                            </div>
+                            <div class="mb-3">
+                                <label for="epg_git_private_token" class="form-label">EPG Git Token</label>
+                                <input type="password" class="form-control" id="epg_git_private_token" name="epg_git_private_token" placeholder="Git Personal Access Token(<用户名>:<PAT>)">
+                            </div>
                             <button type="submit" class="btn btn-primary w-100">保存配置并运行</button>
                         </form>
                     </div>

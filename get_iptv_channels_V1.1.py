@@ -12,6 +12,8 @@ import os
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
+import subprocess
+import shutil
 
 # 配置日志记录
 logger = logging.getLogger(__name__)
@@ -56,6 +58,8 @@ class Config:
     UserAgent: str = ''
     templateName: str = ''
     areaId: str = ''
+    epg_git_repo: str = ''
+    epg_git_private_token: str = ''
 
     @classmethod
     def load(cls, config_file: str = CONFIG_PATH) -> 'Config':
@@ -572,6 +576,89 @@ def get_epg(host: str, cookies: dict, channel_info: Dict[str, List[str]]):
     write_epg_file(channel_info, epg_data)
     logger.info('epg.xml,sctv.m3u,sctv.txt以保存到output目录')
 
+def sync_epg():
+    """同步EPG数据到github仓库"""
+    epg_git_repo = config.get('epg_git_repo')
+    epg_git_private_token = config.get('epg_git_private_token')
+    
+    if not epg_git_repo or not epg_git_private_token:
+        logger.warning("未配置EPG Git仓库信息，跳过同步")
+        return
+
+    try:
+        # 构建带token的仓库URL
+        if epg_git_repo.startswith('https://'):
+            repo_url = epg_git_repo.replace('https://', f'https://{epg_git_private_token}@')
+        else:
+            raise ValueError("目前仅支持HTTPS格式的Git仓库URL")
+
+        # 本地git仓库目录
+        git_dir = os.path.join(os.getcwd(), "epg_repo")
+        
+        # 如果目录存在，先清理
+        if os.path.exists(git_dir):
+            shutil.rmtree(git_dir)
+            
+        # 1. 克隆仓库
+        logger.info(f"正在克隆仓库...")
+        subprocess.run(["git", "clone", repo_url, git_dir], check=True, capture_output=True)
+
+        # 2. 配置git用户
+        subprocess.run(["git", "config", "user.name", "iptv-bot"], cwd=git_dir, check=True)
+        subprocess.run(["git", "config", "user.email", "iptv-bot@local"], cwd=git_dir, check=True)
+
+        # 3. 复制epg.xml
+        src_file = os.path.join(os.getcwd(), "output", "epg.xml")
+        dst_file = os.path.join(git_dir, "epg.xml")
+        
+        if not os.path.exists(src_file):
+            logger.error(f"源文件 {src_file} 不存在")
+            return
+            
+        shutil.copy2(src_file, dst_file)
+        
+        # 4. 撤销上一修改(git reset --soft HEAD^)并commit
+        # 检查是否有commit
+        has_commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=git_dir, capture_output=True).returncode == 0
+        
+        if has_commit:
+            # 尝试回退上一次提交
+            try:
+                # 检查是否至少有一个提交
+                commit_count = subprocess.run(["git", "rev-list", "--count", "HEAD"], cwd=git_dir, capture_output=True, text=True).stdout.strip()
+                if int(commit_count) > 0:
+                    subprocess.run(["git", "reset", "--soft", "HEAD^"], cwd=git_dir, check=True, capture_output=True)
+                    logger.info("已撤销上一次提交 (reset --soft HEAD^)")
+            except Exception:
+                pass
+
+        # 添加文件
+        subprocess.run(["git", "add", "."], cwd=git_dir, check=True)
+        
+        # 提交
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        subprocess.run(["git", "commit", "-m", f"Update EPG {timestamp}"], cwd=git_dir, check=True)
+        
+        # 5. 强制推送
+        logger.info("正在推送到远程仓库...")
+        subprocess.run(["git", "push", "-f"], cwd=git_dir, check=True)
+        
+        logger.info("EPG数据同步成功")
+        
+    except subprocess.CalledProcessError as e:
+        err_msg = e.stderr.decode() if e.stderr else str(e)
+        if epg_git_private_token in err_msg:
+             err_msg = err_msg.replace(epg_git_private_token, "******")
+        logger.error(f"Git操作失败: {err_msg}")
+    except Exception as e:
+        logger.error(f"同步EPG数据失败: {str(e)}")
+    finally:
+        # 清理临时目录
+        if os.path.exists(git_dir):
+            try:
+                shutil.rmtree(git_dir)
+            except:
+                pass
 if __name__ == '__main__':
     
 
@@ -585,3 +672,4 @@ if __name__ == '__main__':
         
     channel_info = get_channel_list(host, cookies, user_token, stbid)
     get_epg(host, cookies, channel_info)
+    sync_epg()
