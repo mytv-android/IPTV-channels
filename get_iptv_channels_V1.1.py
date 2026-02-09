@@ -641,7 +641,8 @@ def sync_epg():
         
         # 5. 强制推送
         logger.info("正在推送到远程仓库...")
-        subprocess.run(["git", "push", "-f"], cwd=git_dir, check=True)
+        subprocess.run(["git", "push", repo_url, "-f"],
+                       cwd=git_dir, check=True, capture_output=True)
         
         logger.info("EPG数据同步成功")
         
