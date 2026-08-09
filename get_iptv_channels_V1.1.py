@@ -309,10 +309,10 @@ def get_auth(max_retries: int = 3) -> Optional[Tuple[str, dict, str, str]]:
             continue
 
 def format_xmltv_time(timestamp):
-    """将时间戳转换为XMLTV格式"""
+    """将时间戳转换为XMLTV格式(纯时间, 时区由 write_epg_file 统一拼接)"""
     from datetime import datetime
     dt = datetime.strptime(timestamp, '%Y%m%d%H%M%S')
-    return dt.strftime('%Y%m%d%H%M%S %z')
+    return dt.strftime('%Y%m%d%H%M%S')
             
 
 def process_channel_data(channels: List[Tuple[str, ...]]) -> Dict[str, List[str]]:
@@ -415,34 +415,50 @@ def process_epg_data(channel_id: str, channel_name: List[str], response_text: st
         if not epg_data or not isinstance(epg_data, list) or len(epg_data) < 2:
             logger.debug(f"EPG数据为空或不完整，跳过频道 {channel_id}")
             return None
-            
+
+        # 服务器固定返回 -7~+1 共 9 天数据 (epg_data[0] 为日期列表, epg_data[1] 为对应节目组)
+        # 只取今天(index=0)和明天(index=1), 避免过期节目写入
+        day_list = epg_data[0] if epg_data[0] and isinstance(epg_data[0], list) else []
+        program_groups = epg_data[1] if isinstance(epg_data[1], list) else []
+
         programs_data = []
-        for programs in epg_data[1]:
+        for group_index, programs in enumerate(program_groups):
+            # 取该组对应的日期索引 (index=0 为今天)
+            day_index = 0
+            if group_index < len(day_list):
+                day_info = day_list[group_index]
+                if isinstance(day_info, dict):
+                    day_index = day_info.get('index', day_info.get('dateIndex', 0)) or 0
+
+            # 只保留今天和明天
+            if day_index not in (0, 1):
+                continue
+
             if isinstance(programs, list):
                 for program in programs:
                     if not isinstance(program, dict):
                         continue
-                        
+
                     # 获取节目信息
                     program_data = {
                         'beginTimeFormat': program.get('beginTimeFormat', ''),
                         'endTimeFormat': program.get('endTimeFormat', ''),
                         'programName': program.get('programName', '未知节目')
                     }
-                    
+
                     # 验证时间格式
                     if not program_data['beginTimeFormat'] or not program_data['endTimeFormat']:
                         logger.debug(f"节目时间格式无效，跳过: {program_data}")
                         continue
-                        
+
                     # 格式化时间
                     start_time = format_xmltv_time(program_data['beginTimeFormat'])
                     end_time = format_xmltv_time(program_data['endTimeFormat'])
-                    
+
                     if not start_time or not end_time:
                         logger.debug(f"时间转换失败，跳过: {program_data}")
                         continue
-                        
+
                     # 转义节目名称中的特殊字符
                     program_name = program_data["programName"]
                     program_name = program_name.replace('<', '《').replace('>', '》')
@@ -454,7 +470,7 @@ def process_epg_data(channel_id: str, channel_name: List[str], response_text: st
                         'end_time': end_time,
                         'program_name': program_name
                     })
-        
+
         return programs_data
         
     except (ValueError, json.JSONDecodeError, KeyError) as e:
