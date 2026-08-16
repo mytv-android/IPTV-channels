@@ -376,9 +376,10 @@ def process_channel_data(channels: List[Tuple[str, ...]]) -> Dict[str, List[str]
                             url = f'{url}&fec={channel[10]}'
                         else:
                             url = f'{url}?fec={channel[10]}'
+                    TIMESHFIT = f'&r2h-seek-mode=range({channel[5]})' if channel[4] == '1' else ''  # 支持时移
                     # 写入txt文件
                     rtspUrl = channel[6].replace(
-                        "rtsp://", f'{RTP2HTTPD}/rtsp/')+'?playseek=${(b)yyyyMMddHHmmss}-${(e)yyyyMMddHHmmss}&r2h-seek-mode=range(3600)' if channel[4] == '1' else None
+                        "rtsp://", f'{RTP2HTTPD}/rtsp/')+'?playseek=${(b)yyyyMMddHHmmss}-${(e)yyyyMMddHHmmss}' + TIMESHFIT if channel[4] == '1' else None
                     if rtspUrl is not None:  # 支持时移的源
                         ftxt.write(f'{name},{rtspUrl}#{url}\n')
                     else:
